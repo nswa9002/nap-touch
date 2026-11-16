@@ -30,8 +30,8 @@
 	#stick-zone-r { right:0; }
 	.stick { position:absolute; width:124px; height:124px; pointer-events:none;
 		background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='124' height='124'%3E%3Cg stroke='rgba(255,255,255,0.55)' stroke-width='2'%3E%3Cline x1='62' y1='0' x2='62' y2='10'/%3E%3Cline x1='62' y1='114' x2='62' y2='124'/%3E%3Cline x1='0' y1='62' x2='10' y2='62'/%3E%3Cline x1='114' y1='62' x2='124' y2='62'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
-	#stick-l { left:34px; bottom:34px; }
-	#stick-r { right:34px; bottom:34px; }
+	#stick-l { left:calc(34px + env(safe-area-inset-left, 0px)); bottom:calc(34px + env(safe-area-inset-bottom, 0px)); }
+	#stick-r { right:calc(34px + env(safe-area-inset-right, 0px)); bottom:calc(34px + env(safe-area-inset-bottom, 0px)); }
 	.stick-base { position:absolute; inset:8px; border-radius:50%;
 		background:radial-gradient(circle at 50% 42%, rgba(255,255,255,0.12), rgba(0,0,0,0.30) 75%);
 		border:2px solid rgba(255,255,255,0.65);
@@ -50,6 +50,7 @@
 	.tbtn.active { background:rgba(255,255,255,0.38); }
 	.tbtn.small { width:46px; height:46px; font-size:11px; }
 	#btn-pause { top:calc(10px + env(safe-area-inset-top, 0px)); left:10px; }
+	#btn-mode { top:calc(10px + env(safe-area-inset-top, 0px)); left:calc(62px + env(safe-area-inset-left, 0px)); }
 	#btn-enter { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(92px + env(safe-area-inset-right, 0px)); }
 	#btn-use { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(144px + env(safe-area-inset-right, 0px)); }
 	#btn-jump { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(196px + env(safe-area-inset-right, 0px)); }
@@ -66,10 +67,41 @@
 	#btn-ads { right:calc(66px + env(safe-area-inset-right, 0px)); bottom:calc(178px + env(safe-area-inset-bottom, 0px));
 		width:60px; height:60px; }
 	#btn-ads svg { width:40px; height:40px; display:block; }
+	/* Knife: wide pill, bottom centre. */
+	#btn-melee { left:50%; transform:translateX(-50%); bottom:calc(18px + env(safe-area-inset-bottom, 0px));
+		width:132px; height:52px; border-radius:26px; background:rgba(255,255,255,0.16); }
+	#btn-melee svg { width:96px; height:26px; display:block; }
+	#btn-melee.active { background:rgba(255,255,255,0.38); }
+
+	/* Menu mode: big nav buttons, game controls hidden. */
+	#menu-nav { display:none; position:absolute; inset:0; pointer-events:none; }
+	body.menu-mode #menu-nav { display:block; }
+	body.menu-mode #stick-l, body.menu-mode #stick-r,
+	body.menu-mode #stick-zone-l, body.menu-mode #stick-zone-r,
+	body.menu-mode #btn-melee, body.menu-mode #btn-ads,
+	body.menu-mode #btn-weapon, body.menu-mode #btn-grenade,
+	body.menu-mode #btn-jump, body.menu-mode #btn-sprint,
+	body.menu-mode #btn-use, body.menu-mode #touch-hint { display:none; }
+	#menu-nav .tbtn { width:76px; height:64px; border-radius:14px; font-size:13px; }
+	#nav-up { left:50%; margin-left:-164px; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
+	#nav-down { left:50%; margin-left:-80px; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
+	#nav-select { left:50%; margin-left:4px; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
+	#nav-back { left:50%; margin-left:88px; bottom:calc(24px + env(safe-area-inset-bottom, 0px)); }
 
 	#touch-hint { position:absolute; top:calc(64px + env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%);
 		color:rgba(255,255,255,0.75); font-family:Arial, Helvetica, sans-serif; font-size:13px; white-space:nowrap;
 		text-shadow:0 1px 2px #000; pointer-events:none; transition:opacity 1s; }
+
+	/* Rotate prompt: a landscape game, shown only while holding the phone upright. */
+	#rotate-prompt { display:none; position:fixed; inset:0; z-index:20; pointer-events:none;
+		align-items:center; justify-content:center; flex-direction:column; gap:14px;
+		background:rgba(0,0,0,0.72); color:#fff; font-family:Arial, Helvetica, sans-serif;
+		font-size:18px; font-weight:bold; text-align:center; text-shadow:0 1px 2px #000; }
+	#rotate-prompt svg { width:64px; height:64px; }
+	#rotate-prompt small { font-size:13px; font-weight:normal; color:rgba(255,255,255,0.75); }
+	@media (orientation: portrait) {
+		body.touch.playing #rotate-prompt { display:flex; }
+	}
 	</style>
   </head>
   <body ondrop="gotdrop(event);" ondragover="event.preventDefault()">
@@ -89,7 +121,9 @@
 		<div class="stick" id="stick-l"><div class="stick-base"></div><div class="stick-knob" id="stick-knob-l"></div></div>
 		<div class="stick" id="stick-r"><div class="stick-base"></div><div class="stick-knob" id="stick-knob-r"></div></div>
 		<div id="touch-hint">Left stick to move &bull; Right stick to look &bull; Tap to fire, double-tap + hold for auto</div>
+		<div id="rotate-prompt"><svg viewBox="0 0 64 64"><g fill="none" stroke="#fff" stroke-width="3"><rect x="22" y="6" width="20" height="34" rx="3"/><path d="M52 40 A20 20 0 1 1 50 22"/></g><path d="M50 14 L52 24 L42 22 Z" fill="#fff"/></svg>Turn your phone sideways to play<small>Landscape works best — the sticks and buttons are laid out for it</small></div>
 		<div class="tbtn small" id="btn-pause">II</div>
+		<div class="tbtn small" id="btn-mode">MENU</div>
 		<div class="tbtn small" id="btn-enter">OK</div>
 		<div class="tbtn small" id="btn-use">USE</div>
 		<div class="tbtn small" id="btn-jump">JUMP</div>
@@ -98,6 +132,12 @@
 		<div class="tbtn small" id="btn-grenade"><svg viewBox="0 0 24 24"><circle cx="12" cy="14" r="7" fill="#fff"/><rect x="10" y="4" width="4" height="5" fill="#fff"/><circle cx="18" cy="5" r="2.5" fill="none" stroke="#fff" stroke-width="1.5"/></svg></div>
 		<div class="tbtn" id="btn-ads"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="2"/><line x1="20" y1="2" x2="20" y2="10" stroke="#fff" stroke-width="2"/><line x1="20" y1="30" x2="20" y2="38" stroke="#fff" stroke-width="2"/><line x1="2" y1="20" x2="10" y2="20" stroke="#fff" stroke-width="2"/><line x1="30" y1="20" x2="38" y2="20" stroke="#fff" stroke-width="2"/><circle cx="20" cy="20" r="1.5" fill="#fff"/></svg></div>
 		<div class="tbtn" id="btn-melee"><svg viewBox="0 0 96 26"><path d="M6 13 L50 6 Q58 6 58 13 Q58 20 50 20 Z" fill="#fff"/><rect x="58" y="8" width="5" height="10" rx="1" fill="#fff"/><rect x="65" y="9" width="26" height="8" rx="4" fill="#fff"/></svg></div>
+		<div id="menu-nav">
+			<div class="tbtn" id="nav-up">▲ UP</div>
+			<div class="tbtn" id="nav-down">▼ DOWN</div>
+			<div class="tbtn" id="nav-select">SELECT</div>
+			<div class="tbtn" id="nav-back">BACK</div>
+		</div>
 	</div>
 
 	<script type='text/javascript'>
@@ -168,6 +208,11 @@ function begin()
 	document.getElementById('dropzone').hidden = true;
 	document.getElementById('begin').hidden = true;
 	document.body.classList.add('playing');	// reveal the touch controls (touch devices only)
+	// Best effort: lock to landscape (Android honours it; iOS Safari ignores it,
+	// where the rotate prompt does the job instead).
+	try {
+		if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {});
+	} catch (e) {}
 	// Fade the touch hint out a few seconds after play starts.
 	setTimeout(function () {
 		var h = document.getElementById('touch-hint');
@@ -313,7 +358,9 @@ else
 		G:     { key: 'g',       code: 'KeyG',        keyCode: 71 },
 		V:     { key: 'v',       code: 'KeyV',        keyCode: 86 },
 		ESC:   { key: 'Escape',  code: 'Escape',      keyCode: 27 },
-		ENTER: { key: 'Enter',   code: 'Enter',       keyCode: 13 }
+		ENTER: { key: 'Enter',   code: 'Enter',       keyCode: 13 },
+		UP:    { key: 'ArrowUp',   code: 'ArrowUp',   keyCode: 38 },
+		DOWN:  { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40 }
 	};
 
 	function patchProp(ev, name, value) {
@@ -376,6 +423,9 @@ else
 		setTimeout(function () { keyUp(spec); }, 70);
 	}
 	function mouseDown(button, x, y) {
+		// Move the cursor to the tap point first: the engine's menus track the
+		// mouse from mousemove, so a click without one lands at a stale position.
+		mouseMove(0, 0, x, y);
 		canvas.dispatchEvent(makeMouseEvent('mousedown', { button: button, buttons: button === 2 ? 2 : 1, x: x, y: y }));
 	}
 	function mouseUp(button, x, y) {
@@ -470,6 +520,28 @@ else
 	weaponEl.addEventListener('mousedown', function (e) { e.preventDefault(); }, { passive: false });
 	weaponEl.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
+	// Menu / game mode toggle: the page can't tell when the game is in a menu,
+	// so this is a manual switch. Menu mode hides the game controls, shows big
+	// nav buttons, and makes taps simple clicks (no auto-fire).
+	var modeBtn = document.getElementById('btn-mode');
+	modeBtn.addEventListener('touchstart', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var menu = document.body.classList.toggle('menu-mode');
+		modeBtn.textContent = menu ? 'GAME' : 'MENU';
+		if (menu) {
+			if (stickId !== null) releaseStick();
+			releaseLook();
+			if (fireHeld) fireUp(0, 0);
+		}
+	}, { passive: false });
+	modeBtn.addEventListener('mousedown', function (e) { e.preventDefault(); }, { passive: false });
+	modeBtn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+	// Big menu nav buttons: arrow keys + Enter/Esc.
+	bindTap('nav-up',     function () { keyTap(KEY.UP); });
+	bindTap('nav-down',   function () { keyTap(KEY.DOWN); });
+	bindTap('nav-select', function () { keyTap(KEY.ENTER); });
+	bindTap('nav-back',   function () { keyTap(KEY.ESC); });
+
 	/* ---------- virtual joystick (left, fixed base) ---------- */
 	var stickZone = document.getElementById('stick-zone-l');
 	var stickKnob = document.getElementById('stick-knob-l');
@@ -500,13 +572,15 @@ else
 		}
 		return null;
 	}
-	// Fixed stick: base sits at left 34px / bottom 34px, centre (96, H-96).
+	// Fixed stick: anchor is the real centre of the stick on screen
+	// (moves with safe-area insets on notched phones).
 	stickZone.addEventListener('touchstart', function (e) {
 		e.preventDefault(); e.stopPropagation();
 		if (stickId !== null) return;
 		var t = e.changedTouches[0];
 		stickId = t.identifier;
-		anchorX = 96; anchorY = window.innerHeight - 96;
+		var r = document.getElementById('stick-l').getBoundingClientRect();
+		anchorX = r.left + r.width / 2; anchorY = r.top + r.height / 2;
 	}, { passive: false });
 	stickZone.addEventListener('touchmove', function (e) {
 		e.preventDefault(); e.stopPropagation();
@@ -550,18 +624,21 @@ else
 		// absolute-position look — covers both engine paths.
 		mouseMove(mx, my, Math.round(virtX), Math.round(virtY));
 	}
-	// Fixed stick: base sits at right 34px / bottom 34px, centre (W-96, H-96).
+	// Fixed stick: anchor is the real centre of the stick on screen
+	// (moves with safe-area insets on notched phones).
 	lookZone.addEventListener('touchstart', function (e) {
 		e.preventDefault(); e.stopPropagation();
 		if (lookId !== null) return;
 		var t = e.changedTouches[0];
 		lookId = t.identifier;
-		lookAnchorX = window.innerWidth - 96; lookAnchorY = window.innerHeight - 96;
+		var r = document.getElementById('stick-r').getBoundingClientRect();
+		lookAnchorX = r.left + r.width / 2; lookAnchorY = r.top + r.height / 2;
 		lookDX = 0; lookDY = 0;
 		lookStartT = Date.now(); lookMoved = 0;
 		virtX = t.clientX; virtY = t.clientY;
 		// Tapping the right stick fires (old game): double-tap + hold = sustained fire.
-		lookAuto = (Date.now() - lastTapEnd) < DOUBLE_TAP_MS;
+		// In menu mode taps are simple clicks only — no auto-fire.
+		lookAuto = !document.body.classList.contains('menu-mode') && (Date.now() - lastTapEnd) < DOUBLE_TAP_MS;
 		if (lookAuto) fireDown(t.clientX, t.clientY);
 		if (lookTimer === null) lookTimer = setInterval(lookTick, 16);
 	}, { passive: false });
@@ -577,18 +654,21 @@ else
 		lookKnob.style.left = (34 + dx) + 'px';
 		lookKnob.style.top = (34 + dy) + 'px';
 	}, { passive: false });
-	var lookEnd = function (e) {
-		e.preventDefault(); e.stopPropagation();
-		var t = lookTouch(e);
-		if (!t) return;
+	function releaseLook() {
 		lookId = null; lookDX = 0; lookDY = 0;
 		if (lookTimer !== null) { clearInterval(lookTimer); lookTimer = null; }
 		lookKnob.style.left = '34px';
 		lookKnob.style.top = '34px';
+	}
+	var lookEnd = function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var t = lookTouch(e);
+		if (!t) return;
 		// A short, near-stationary touch on the right stick is a shot.
 		if (lookAuto) { fireUp(t.clientX, t.clientY); }
 		else if (lookMoved < 12 && (Date.now() - lookStartT) < 350) { fireShot(t.clientX, t.clientY); }
 		lastTapEnd = Date.now();
+		releaseLook();
 	};
 	lookZone.addEventListener('touchend', lookEnd, { passive: false });
 	lookZone.addEventListener('touchcancel', lookEnd, { passive: false });
@@ -610,7 +690,8 @@ else
 		tapStartX = t.clientX; tapStartY = t.clientY;
 		// Double-tap + hold = sustained automatic fire; single tap = one shot.
 		// (In the menus the same tap is a click — same mouse button either way.)
-		tapAuto = (Date.now() - lastTapEnd) < DOUBLE_TAP_MS;
+		// In menu mode taps are simple clicks only — no auto-fire.
+		tapAuto = !document.body.classList.contains('menu-mode') && (Date.now() - lastTapEnd) < DOUBLE_TAP_MS;
 		if (tapAuto) fireDown(tapStartX, tapStartY);
 		else fireShot(tapStartX, tapStartY);
 	}, { passive: false });
@@ -626,6 +707,12 @@ else
 	tapZone.addEventListener('touchcancel', tapEnd, { passive: false });
 
 	/* ---------- misc ---------- */
+	// Rotation: drop any active stick/fire so nothing sticks after turning the phone.
+	window.addEventListener('orientationchange', function () {
+		if (stickId !== null) releaseStick();
+		releaseLook();
+		if (fireHeld) fireUp(0, 0);
+	});
 	// Stop pull-to-refresh / double-tap zoom gestures reaching the page.
 	document.addEventListener('touchmove', function (e) {
 		if (document.body.classList.contains('playing')) e.preventDefault();

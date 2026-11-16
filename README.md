@@ -110,6 +110,25 @@ GameFAQs player guides, and gameplay footage (see report in
   "Repair Barricade" centre-screen). This page can't tell when the
   player is near something buyable, so USE is a plain button — tap it
   when the game's own prompt shows.
+- **Menus**: tap to select, like the old game. Every tap first moves
+  the mouse cursor to the tap point (a mousemove before the click), so
+  the menu highlights the item under your finger and the click lands
+  on it — a tap is a simple click. Double-tap + hold still gives
+  sustained auto fire in game.
+- **Menu mode**: tap the MENU button (top-left, next to pause) to switch
+  the overlay for menus — the sticks, knife, ADS, gun and grenade
+  buttons hide, and four big buttons appear at the bottom: UP / DOWN /
+  SELECT / BACK (arrow keys + Enter/Esc). Taps in menu mode are simple
+  clicks only, no auto-fire. Tap GAME to switch back. The page can't
+  tell when the game itself is in a menu, so this is a manual switch —
+  use it when you open a menu, switch back when you resume playing.
+- **Landscape**: the game is laid out for landscape. Holding the phone
+  upright shows a "Turn your phone sideways" prompt; starting the game
+  also tries to lock landscape (Android honours it, iOS Safari ignores
+  it). The sticks sit clear of the notch/home-indicator safe areas,
+  and their centres are read from the sticks themselves, so they stay
+  accurate on notched phones. Turning the phone mid-game drops any
+  held stick or fire button, so nothing gets stuck after a rotation.
 - Look movement carries BOTH `movementX/Y` (frame delta, for
   pointer-lock-style look) AND a moving `clientX/Y` virtual cursor (for
   absolute-position look) — covers both engine paths.
