@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+	<meta charset="utf-8">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta content="Nazi Zombies: Portable" property="og:title" />
+	<meta content="Call of Duty: Zombies de-make, now in your browser via WebGL! Touch controls included." property="og:description" />
+	<meta content="#6e0d00" data-react-helmet="true" name="theme-color" />
+	<title>NZ: Portable — Touch</title>
+	<link rel="icon" href="nzportable.ico">
+	<style>
+	html,body { background-color:#000000; color:#808080; height:100%; width:100%; margin:0; padding:0; overflow:hidden; overscroll-behavior:none; touch-action:none; position:fixed; }
+	.emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+	div.emscripten { text-align: center; padding:0; margin: 0;}
+	/* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+	canvas.emscripten { border: 0px none; width:100%; height:100%; padding:0; margin: 0; touch-action:none; }
+
+	/* ================= Touch controls overlay ================= */
+	#touch-ui { display:none; position:fixed; inset:0; z-index:10; pointer-events:none;
+		-webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; }
+	body.touch.playing #touch-ui { display:block; }
+	#touch-ui * { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; -webkit-tap-highlight-color:transparent; }
+
+	#stick-zone { position:absolute; left:0; bottom:0; width:45vw; height:55vh; pointer-events:auto; }
+	#stick-base { position:absolute; width:112px; height:112px; margin:-56px 0 0 -56px; border-radius:50%;
+		background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.30); display:none; }
+	#stick-knob { position:absolute; width:52px; height:52px; margin:-26px 0 0 -26px; border-radius:50%;
+		background:rgba(255,255,255,0.28); border:2px solid rgba(255,255,255,0.55); display:none; }
+
+	#look-zone { position:absolute; right:0; top:0; width:55vw; height:100%; pointer-events:auto; }
+
+	.tbtn { position:absolute; display:flex; align-items:center; justify-content:center; text-align:center;
+		border-radius:50%; border:2px solid rgba(255,255,255,0.40); background:rgba(255,255,255,0.14);
+		color:#fff; font-family:Arial, Helvetica, sans-serif; font-weight:bold; pointer-events:auto;
+		text-shadow:0 1px 2px rgba(0,0,0,0.8); }
+	.tbtn.active { background:rgba(255,255,255,0.38); }
+	.tbtn.small { width:46px; height:46px; font-size:11px; }
+	#btn-pause { top:calc(10px + env(safe-area-inset-top, 0px)); left:10px; }
+	#btn-enter { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(10px + env(safe-area-inset-right, 0px)); }
+	#btn-grenade { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(62px + env(safe-area-inset-right, 0px)); }
+	#btn-melee { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(114px + env(safe-area-inset-right, 0px)); }
+	#btn-swap { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(166px + env(safe-area-inset-right, 0px)); }
+	#btn-use { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(218px + env(safe-area-inset-right, 0px)); }
+	#btn-reload { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(270px + env(safe-area-inset-right, 0px)); }
+	#btn-fire { right:calc(16px + env(safe-area-inset-right, 0px)); bottom:calc(22px + env(safe-area-inset-bottom, 0px));
+		width:88px; height:88px; font-size:16px; background:rgba(255,60,40,0.32); border-color:rgba(255,120,100,0.55); }
+	#btn-fire.active { background:rgba(255,60,40,0.60); }
+	#btn-jump { right:calc(120px + env(safe-area-inset-right, 0px)); bottom:calc(26px + env(safe-area-inset-bottom, 0px));
+		width:64px; height:64px; font-size:13px; }
+	#btn-ads { right:calc(116px + env(safe-area-inset-right, 0px)); bottom:calc(106px + env(safe-area-inset-bottom, 0px));
+		width:60px; height:60px; font-size:12px; }
+	#btn-sprint { right:calc(198px + env(safe-area-inset-right, 0px)); bottom:calc(32px + env(safe-area-inset-bottom, 0px));
+		width:56px; height:56px; font-size:11px; }
+
+	#touch-hint { position:absolute; top:calc(64px + env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%);
+		color:rgba(255,255,255,0.75); font-family:Arial, Helvetica, sans-serif; font-size:13px; white-space:nowrap;
+		text-shadow:0 1px 2px #000; pointer-events:none; transition:opacity 1s; }
+	</style>
+  </head>
+  <body ondrop="gotdrop(event);" ondragover="event.preventDefault()">
+	<div class="emscripten" id="status">Please allow/unblock our javascript to play.</div>
+	<div id="dropzone" ondrop="gotdrop(event);" ondragover="event.preventDefault()" hidden=1>Drop Zone</div>
+	<button type="button" onclick="begin()" id="begin" hidden=1>Click To Begin!</button>
+	<div class="emscripten">
+		<progress value="0" max="100" id="progress" hidden=1></progress>
+	</div>
+	<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" hidden=1></canvas>
+
+	<!-- Touch controls (shown only on touch devices, once the game has started) -->
+	<div id="touch-ui">
+		<div id="stick-zone"><div id="stick-base"></div><div id="stick-knob"></div></div>
+		<div id="look-zone"></div>
+		<div id="touch-hint">Left stick to move &bull; Drag right side to look &bull; Tap right side to click</div>
+		<div class="tbtn small" id="btn-pause">II</div>
+		<div class="tbtn small" id="btn-enter">OK</div>
+		<div class="tbtn small" id="btn-grenade">NADE</div>
+		<div class="tbtn small" id="btn-melee">KNIFE</div>
+		<div class="tbtn small" id="btn-swap">SWAP</div>
+		<div class="tbtn small" id="btn-use">USE</div>
+		<div class="tbtn small" id="btn-reload">RLD</div>
+		<div class="tbtn" id="btn-ads">AIM</div>
+		<div class="tbtn" id="btn-jump">JUMP</div>
+		<div class="tbtn" id="btn-sprint">RUN</div>
+		<div class="tbtn" id="btn-fire">FIRE</div>
+	</div>
+
+	<script type='text/javascript'>
+// connect to canvas
+var Module = {
+	files:
+	{
+		"default.fmf" : "default.fmf",
+		// Game data loads straight from the NZ:P team's own site (they serve CORS *).
+		// game.pk3 (~94 MB) is fetched at runtime, never bundled here.
+		"nzp/game.pk3" : "https://nzp.gay/nzp/game.pk3",
+		"nzp/progs.pk3" : "https://nzp.gay/nzp/progs.pk3"
+	},
+	print: function(msg)
+	{	//stdout...
+		console.log(msg);
+	},
+	printErr: function(text)
+	{	//stderr...
+		console.log(text);
+	},
+	canvas: document.getElementById('canvas'),	//for webgl to attach to
+	setStatus: function(text)
+	{	//gets spammed some prints during startup. blame emscripten.
+		if (Module.setStatus.interval)
+			clearInterval(Module.setStatus.interval);
+		var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+		var statusElement = document.getElementById('status');
+		var progressElement = document.getElementById('progress');
+		if (m) {
+			text = m[1];
+			progressElement.value = parseInt(m[2])*100;
+			progressElement.max = parseInt(m[4])*100;
+			progressElement.hidden = false;
+		} else {
+			progressElement.value = null;
+			progressElement.max = null;
+			progressElement.hidden = true;
+		}
+		statusElement.innerHTML = text;
+		statusElement.hidden = text.length==0;
+	},
+//	preRun: [],
+	totalDependencies: 0,
+	monitorRunDependencies: function(left)
+	{	//progress is progress...
+		this.totalDependencies = Math.max(this.totalDependencies, left);
+		Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+	},
+//	onRuntimeInitialized: function(){},
+	postRun:
+	[	//each of these are called after main was run. we should have our mainloop set up now
+		function()
+		{
+			if (Module["sched"] === undefined)
+			{	//our main function failed to set up the main loop. ie: main didn't get called. panic.
+				alert("Unable to initialise. You may need to restart your browser. If you get this often and inconsistently, consider using a 64bit browser instead.");
+				Module.setStatus("Initialisation Failure");
+			}
+		}
+	],
+};
+function begin()
+{
+	if (Module.began)
+		return;
+	Module.began = true;
+	document.getElementById('dropzone').hidden = true;
+	document.getElementById('begin').hidden = true;
+	document.body.classList.add('playing');	// reveal the touch controls (touch devices only)
+	// Fade the touch hint out a few seconds after play starts.
+	setTimeout(function () {
+		var h = document.getElementById('touch-hint');
+		if (h) h.style.opacity = '0';
+	}, 9000);
+	Module.setStatus('Downloading...');
+
+	// make a script. do it the hard way for the error.
+	var s = document.createElement('script');
+	// set it up
+	s.setAttribute('src',"https://nzp.gay/ftewebgl.js");
+	s.setAttribute('type',"text/javascript");
+	s.setAttribute('charset',"utf-8");
+	s.addEventListener('error', function() {alert("Oh noes! we got an error!"); Module.setStatus("Unable to download engine javascript");}, false);
+	// add to DOM
+	document.head.appendChild(s);
+}
+
+//stuff to facilitate our drag+drop filesystem support
+function fixupfilepath(fname, path)
+{
+	//we just have a filename, try to guess where to put it.
+	if (path != "")
+		return path+fname;	//already has a path. use it. this allows people to drag+drop gamedirs.
+	var ext = fname.substr(fname.lastIndexOf('.') + 1);
+	if (ext == 'fmf' || ext == 'kpf')	//these are the only files that really make sense in the root.
+		return fname;
+	if (ext == 'bsp' || ext == 'map' || ext == 'lit' || ext == 'lux')
+		return "id1/maps/" + fname;	//bsps get their own extra subdir
+	return "id1/" + fname;	//probably a pak. maybe a cfg, no idea really.
+}
+function showfiles()
+{
+	//print the pending file list in some pretty way
+	if (Module.began)
+		return;
+	Module.setStatus('');
+	document.getElementById('dropzone').hidden = false;
+	document.getElementById('begin').hidden = false;
+	var nt = "Drag gamedirs or individual package files here to make them available!<br/>Active Files:<br/><pre>";
+	var keys = Object.keys(Module.files);
+	for(var i = 0; i < keys.length; i++)
+	{
+		if (Module.files[keys[i]] instanceof ArrayBuffer)
+		{
+			var sz = Module.files[keys[i]].byteLength;
+			if (sz > 512*1024)
+				sz = (sz / (1024*1024)) + "mb";
+			else if (sz > 512)
+				sz = (sz / 1024) + "kb";
+			else
+				sz = (sz) + " bytes";
+			nt += "    " + keys[i] + " ("+sz+")<br/>";
+		}
+		else
+			nt += "    " + keys[i] + "<br/>";
+	}
+	nt += "</pre>("+keys.length+" files)";
+	document.getElementById('dropzone').innerHTML = nt;
+}
+function scanfiles(item,path)
+{
+	//for directory drops
+	if (item.isFile)
+	{
+		item.file(function(f)
+		{
+			let n = fixupfilepath(f.name, path);
+			Module.files[n]=f.arrayBuffer();	//actually a promise...
+			Module.files[n].then(buf=>{Module.files[n]=buf;showfiles();});	//try and resolve it now.
+		});
+	}
+	else if (item.isDirectory)
+	{
+		// Get folder contents
+		var dirReader = item.createReader();
+		dirReader.readEntries(function(entries)
+		{
+			for(var i = 0; i < entries.length; i++)
+				scanfiles(entries[i], path + item.name + "/");
+		});
+	}
+}
+function gotdrop(ev)
+{
+	//user drag+dropped something.
+	ev.preventDefault();
+	for (var i = 0; i < ev.dataTransfer.items.length; i++)
+		if (ev.dataTransfer.items[i].webkitGetAsEntry)
+		{
+			var d = ev.dataTransfer.items[i].webkitGetAsEntry();
+			if (d)
+				scanfiles(d, "");
+		}
+		else if (ev.dataTransfer.items[i].kind === 'file')
+		{
+			var f = ev.dataTransfer.items[i].getAsFile();
+			var n = fixupfilepath(f.name);
+			Module.files[n]=f.arrayBuffer();	//actually a promise...
+			Module.files[n].then(buf=>{Module.files[n]=buf;showfiles();});	//try and resolve it now.
+		}
+	showfiles();
+}
+if (window.location.hash != "" || Object.keys(Module.files).length)
+	begin();		//if the url has a #foo.fmf then just begin instantly,
+else
+	showfiles();	//otherwise show our lame file dropper and wait for the user to click 'go'.
+    </script>
+
+	<script type='text/javascript'>
+/* ================= Touch controls =================
+   Feeds the Emscripten/FTEQW engine the same DOM input a keyboard +
+   mouse would: synthetic KeyboardEvent/MouseEvent dispatched on the
+   canvas (bubbles to window, where the engine's SDL listeners live).
+   Key bindings below are NZ:P's real defaults, taken from the game's
+   own default.cfg (shipped inside nzp/game.pk3):
+     W/A/S/D move | SPACE jump (impulse 10) | SHIFT sprint (impulse 23)
+     CTRL swap weapon (+button4) | R reload (+button5) | E interact (+button7)
+     G grenade (+button3) | V melee (+button6)
+     MOUSE1 fire (+attack) | MOUSE2 aim down sights (+button8)
+     ESC pause (togglemenu) | ENTER confirm
+   "Change stance" (impulse 30) has NO default key in default.cfg, so
+   there is no stance button on purpose.
+*/
+(function () {
+	'use strict';
+	var canvas = document.getElementById('canvas');
+	var isTouch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) ||
+		(window.location.search.indexOf('touch=1') !== -1); // ?touch=1 forces the UI (for testing)
+	if (isTouch) document.body.classList.add('touch');
+
+	/* ---------- key / mouse event factories ---------- */
+	var KEY = {
+		W:     { key: 'w',       code: 'KeyW',        keyCode: 87 },
+		A:     { key: 'a',       code: 'KeyA',        keyCode: 65 },
+		S:     { key: 's',       code: 'KeyS',        keyCode: 83 },
+		D:     { key: 'd',       code: 'KeyD',        keyCode: 68 },
+		SPACE: { key: ' ',       code: 'Space',       keyCode: 32 },
+		SHIFT: { key: 'Shift',   code: 'ShiftLeft',   keyCode: 16 },
+		CTRL:  { key: 'Control', code: 'ControlLeft', keyCode: 17 },
+		R:     { key: 'r',       code: 'KeyR',        keyCode: 82 },
+		E:     { key: 'e',       code: 'KeyE',        keyCode: 69 },
+		G:     { key: 'g',       code: 'KeyG',        keyCode: 71 },
+		V:     { key: 'v',       code: 'KeyV',        keyCode: 86 },
+		ESC:   { key: 'Escape',  code: 'Escape',      keyCode: 27 },
+		ENTER: { key: 'Enter',   code: 'Enter',       keyCode: 13 }
+	};
+
+	function patchProp(ev, name, value) {
+		// Some browsers drop keyCode/which or movementX/Y from the init dict;
+		// shadowing them on the instance makes the engine see the right values.
+		try {
+			if (ev[name] !== value)
+				Object.defineProperty(ev, name, { configurable: true, get: function () { return value; } });
+		} catch (e) { /* read-only on this browser; init-dict value (if any) stands */ }
+	}
+
+	function makeKeyEvent(type, spec) {
+		var ev;
+		try {
+			ev = new KeyboardEvent(type, {
+				key: spec.key, code: spec.code, keyCode: spec.keyCode, which: spec.keyCode,
+				bubbles: true, cancelable: true
+			});
+		} catch (e) {
+			ev = document.createEvent('KeyboardEvent');
+			ev.initKeyboardEvent(type, true, true, window, spec.key, 0, '', 0, '');
+		}
+		patchProp(ev, 'keyCode', spec.keyCode);
+		patchProp(ev, 'which', spec.keyCode);
+		return ev;
+	}
+
+	function makeMouseEvent(type, o) {
+		var ev;
+		try {
+			ev = new MouseEvent(type, {
+				button: o.button || 0, buttons: o.buttons || 0,
+				clientX: o.x || 0, clientY: o.y || 0,
+				movementX: o.dx || 0, movementY: o.dy || 0,
+				bubbles: true, cancelable: true, view: window
+			});
+		} catch (e) {
+			ev = document.createEvent('MouseEvent');
+			ev.initMouseEvent(type, true, true, window, 1, o.x || 0, o.y || 0, o.x || 0, o.y || 0,
+				false, false, false, false, o.button || 0, null);
+		}
+		patchProp(ev, 'movementX', o.dx || 0);
+		patchProp(ev, 'movementY', o.dy || 0);
+		return ev;
+	}
+
+	var heldKeys = {}; // code -> true while the synthetic key is down
+	function keyDown(spec) {
+		if (heldKeys[spec.code]) return;
+		heldKeys[spec.code] = true;
+		window.dispatchEvent(makeKeyEvent('keydown', spec));
+	}
+	function keyUp(spec) {
+		if (!heldKeys[spec.code]) return;
+		delete heldKeys[spec.code];
+		window.dispatchEvent(makeKeyEvent('keyup', spec));
+	}
+	function keyTap(spec) { // quick press + release (impulse-style actions: jump, reload, use...)
+		keyDown(spec);
+		setTimeout(function () { keyUp(spec); }, 70);
+	}
+	function mouseDown(button, x, y) {
+		canvas.dispatchEvent(makeMouseEvent('mousedown', { button: button, buttons: button === 2 ? 2 : 1, x: x, y: y }));
+	}
+	function mouseUp(button, x, y) {
+		canvas.dispatchEvent(makeMouseEvent('mouseup', { button: button, buttons: 0, x: x, y: y }));
+	}
+	function mouseMove(dx, dy, x, y) {
+		canvas.dispatchEvent(makeMouseEvent('mousemove', { button: 0, buttons: 0, dx: dx, dy: dy, x: x, y: y }));
+	}
+
+	/* ---------- button wiring ---------- */
+	function bindHold(id, onDown, onUp) {
+		var el = document.getElementById(id);
+		if (!el) return;
+		el.addEventListener('touchstart', function (e) {
+			e.preventDefault(); e.stopPropagation();
+			el.classList.add('active'); onDown();
+		}, { passive: false });
+		var end = function (e) {
+			e.preventDefault(); e.stopPropagation();
+			el.classList.remove('active'); onUp();
+		};
+		el.addEventListener('touchend', end, { passive: false });
+		el.addEventListener('touchcancel', end, { passive: false });
+		el.addEventListener('mousedown', function (e) { e.preventDefault(); }, { passive: false });
+		el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+	}
+	function bindTap(id, action) {
+		var el = document.getElementById(id);
+		if (!el) return;
+		el.addEventListener('touchstart', function (e) {
+			e.preventDefault(); e.stopPropagation();
+			el.classList.add('active'); action();
+			setTimeout(function () { el.classList.remove('active'); }, 120);
+		}, { passive: false });
+		el.addEventListener('mousedown', function (e) { e.preventDefault(); }, { passive: false });
+		el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+	}
+	function centerXY() { return { x: Math.round(window.innerWidth / 2), y: Math.round(window.innerHeight / 2) }; }
+
+	// FIRE: hold left mouse button (crosshair is screen centre)
+	bindHold('btn-fire',
+		function () { var p = centerXY(); mouseDown(0, p.x, p.y); },
+		function () { var p = centerXY(); mouseUp(0, p.x, p.y); });
+	// AIM: hold right mouse button (aim down sights)
+	bindHold('btn-ads',
+		function () { var p = centerXY(); mouseDown(2, p.x, p.y); },
+		function () { var p = centerXY(); mouseUp(2, p.x, p.y); });
+	// RUN: hold Shift (sprint, impulse 23)
+	bindHold('btn-sprint', function () { keyDown(KEY.SHIFT); }, function () { keyUp(KEY.SHIFT); });
+	// Taps: jump / reload / use / swap / melee / grenade / pause / menu confirm
+	bindTap('btn-jump',   function () { keyTap(KEY.SPACE); });
+	bindTap('btn-reload', function () { keyTap(KEY.R); });
+	bindTap('btn-use',    function () { keyTap(KEY.E); });
+	bindTap('btn-swap',   function () { keyTap(KEY.CTRL); });
+	bindTap('btn-melee',  function () { keyTap(KEY.V); });
+	bindTap('btn-grenade',function () { keyTap(KEY.G); });
+	bindTap('btn-pause',  function () { keyTap(KEY.ESC); });
+	bindTap('btn-enter',  function () { keyTap(KEY.ENTER); });
+
+	/* ---------- virtual joystick (left) ---------- */
+	var stickZone = document.getElementById('stick-zone');
+	var stickBase = document.getElementById('stick-base');
+	var stickKnob = document.getElementById('stick-knob');
+	var STICK_RADIUS = 48, DEAD = 10;
+	var stickId = null, anchorX = 0, anchorY = 0;
+	var stickState = { f: false, b: false, l: false, r: false };
+
+	function applyStick(dx, dy) {
+		var want = { f: dy < -DEAD, b: dy > DEAD, l: dx < -DEAD, r: dx > DEAD };
+		if (want.f !== stickState.f) { want.f ? keyDown(KEY.W) : keyUp(KEY.W); stickState.f = want.f; }
+		if (want.b !== stickState.b) { want.b ? keyDown(KEY.S) : keyUp(KEY.S); stickState.b = want.b; }
+		if (want.l !== stickState.l) { want.l ? keyDown(KEY.A) : keyUp(KEY.A); stickState.l = want.l; }
+		if (want.r !== stickState.r) { want.r ? keyDown(KEY.D) : keyUp(KEY.D); stickState.r = want.r; }
+	}
+	function releaseStick() {
+		if (stickState.f) keyUp(KEY.W);
+		if (stickState.b) keyUp(KEY.S);
+		if (stickState.l) keyUp(KEY.A);
+		if (stickState.r) keyUp(KEY.D);
+		stickState = { f: false, b: false, l: false, r: false };
+		stickId = null;
+		stickBase.style.display = 'none';
+		stickKnob.style.display = 'none';
+	}
+	function stickTouch(e) {
+		for (var i = 0; i < e.changedTouches.length; i++) {
+			if (e.changedTouches[i].identifier === stickId) return e.changedTouches[i];
+		}
+		return null;
+	}
+	stickZone.addEventListener('touchstart', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		if (stickId !== null) return;
+		var t = e.changedTouches[0];
+		stickId = t.identifier; anchorX = t.clientX; anchorY = t.clientY;
+		stickBase.style.display = 'block';
+		stickKnob.style.display = 'block';
+		stickBase.style.left = anchorX + 'px'; stickBase.style.top = anchorY + 'px';
+		stickKnob.style.left = anchorX + 'px'; stickKnob.style.top = anchorY + 'px';
+	}, { passive: false });
+	stickZone.addEventListener('touchmove', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var t = stickTouch(e);
+		if (!t) return;
+		var dx = t.clientX - anchorX, dy = t.clientY - anchorY;
+		var len = Math.sqrt(dx * dx + dy * dy);
+		if (len > STICK_RADIUS) { dx = dx / len * STICK_RADIUS; dy = dy / len * STICK_RADIUS; }
+		stickKnob.style.left = (anchorX + dx) + 'px';
+		stickKnob.style.top = (anchorY + dy) + 'px';
+		applyStick(dx, dy);
+	}, { passive: false });
+	var stickEnd = function (e) {
+		e.preventDefault(); e.stopPropagation();
+		if (stickTouch(e)) releaseStick();
+	};
+	stickZone.addEventListener('touchend', stickEnd, { passive: false });
+	stickZone.addEventListener('touchcancel', stickEnd, { passive: false });
+
+	/* ---------- look area (right): drag to look, tap to click ---------- */
+	var lookZone = document.getElementById('look-zone');
+	var lookId = null, lastX = 0, lastY = 0, startX = 0, startY = 0, startT = 0, moved = 0;
+	var virtX = 0, virtY = 0; // virtual cursor, kept moving so absolute-position mouse reads see deltas too
+	function lookTouch(e) {
+		for (var i = 0; i < e.changedTouches.length; i++) {
+			if (e.changedTouches[i].identifier === lookId) return e.changedTouches[i];
+		}
+		return null;
+	}
+	lookZone.addEventListener('touchstart', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		if (lookId !== null) return;
+		var t = e.changedTouches[0];
+		lookId = t.identifier; lastX = t.clientX; lastY = t.clientY;
+		startX = t.clientX; startY = t.clientY; startT = Date.now(); moved = 0;
+		virtX = t.clientX; virtY = t.clientY;
+	}, { passive: false });
+	lookZone.addEventListener('touchmove', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var t = lookTouch(e);
+		if (!t) return;
+		var dx = t.clientX - lastX, dy = t.clientY - lastY;
+		lastX = t.clientX; lastY = t.clientY;
+		moved += Math.abs(dx) + Math.abs(dy);
+		virtX = Math.max(0, Math.min(window.innerWidth, virtX + dx));
+		virtY = Math.max(0, Math.min(window.innerHeight, virtY + dy));
+		// movementX/Y for pointer-lock-style look, moving clientX/Y for
+		// absolute-position look — covers both engine paths.
+		mouseMove(dx, dy, Math.round(virtX), Math.round(virtY));
+	}, { passive: false });
+	var lookEnd = function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var t = lookTouch(e);
+		if (!t) return;
+		lookId = null;
+		// A short, near-stationary touch is a click (menus, prompts).
+		if (moved < 12 && (Date.now() - startT) < 350) {
+			mouseDown(0, startX, startY);
+			setTimeout(function () { mouseUp(0, startX, startY); }, 60);
+		}
+	};
+	lookZone.addEventListener('touchend', lookEnd, { passive: false });
+	lookZone.addEventListener('touchcancel', lookEnd, { passive: false });
+
+	/* ---------- misc ---------- */
+	// Stop pull-to-refresh / double-tap zoom gestures reaching the page.
+	document.addEventListener('touchmove', function (e) {
+		if (document.body.classList.contains('playing')) e.preventDefault();
+	}, { passive: false });
+	document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+})();
+    </script>
+  </body>
+</html>
