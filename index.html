@@ -24,23 +24,24 @@
 	body.touch.playing #touch-ui { display:block; }
 	#touch-ui * { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; -webkit-tap-highlight-color:transparent; }
 
-	/* ---- emulator-style virtual sticks: fixed bases, glossy knobs ---- */
+	/* ---- virtual sticks: fixed bases, white rings, tick marks ---- */
 	.stick-zone { position:absolute; bottom:0; width:42vw; height:60vh; pointer-events:auto; }
 	#stick-zone-l { left:0; }
 	#stick-zone-r { right:0; }
-	.stick { position:absolute; width:124px; height:124px; pointer-events:none; }
+	.stick { position:absolute; width:124px; height:124px; pointer-events:none;
+		background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='124' height='124'%3E%3Cg stroke='rgba(255,255,255,0.55)' stroke-width='2'%3E%3Cline x1='62' y1='0' x2='62' y2='10'/%3E%3Cline x1='62' y1='114' x2='62' y2='124'/%3E%3Cline x1='0' y1='62' x2='10' y2='62'/%3E%3Cline x1='114' y1='62' x2='124' y2='62'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat; }
 	#stick-l { left:34px; bottom:34px; }
 	#stick-r { right:34px; bottom:34px; }
-	.stick-base { position:absolute; inset:0; border-radius:50%;
-		background:radial-gradient(circle at 50% 42%, rgba(255,255,255,0.10), rgba(0,0,0,0.35) 75%);
-		border:2px solid rgba(255,255,255,0.35);
-		box-shadow:0 0 0 4px rgba(0,0,0,0.25), inset 0 2px 10px rgba(0,0,0,0.5); }
+	.stick-base { position:absolute; inset:8px; border-radius:50%;
+		background:radial-gradient(circle at 50% 42%, rgba(255,255,255,0.12), rgba(0,0,0,0.30) 75%);
+		border:2px solid rgba(255,255,255,0.65);
+		box-shadow:0 0 16px rgba(255,255,255,0.25), inset 0 2px 10px rgba(0,0,0,0.5); }
 	.stick-knob { position:absolute; width:56px; height:56px; left:34px; top:34px; border-radius:50%;
-		background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.75), rgba(255,255,255,0.30) 45%, rgba(0,0,0,0.35) 100%);
-		border:2px solid rgba(255,255,255,0.60); box-shadow:0 3px 8px rgba(0,0,0,0.6); }
+		background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0.35) 45%, rgba(0,0,0,0.30) 100%);
+		border:2px solid rgba(255,255,255,0.75); box-shadow:0 3px 8px rgba(0,0,0,0.6); }
 
-	/* Tap anywhere on the right side (outside sticks/buttons) to click — menus, prompts. */
-	#tap-zone { position:absolute; right:0; top:0; width:55vw; height:100%; pointer-events:auto; }
+	/* Tap anywhere on screen (outside sticks/buttons) to fire — the same click the menus use. */
+	#tap-zone { position:absolute; inset:0; pointer-events:auto; }
 
 	.tbtn { position:absolute; display:flex; align-items:center; justify-content:center; text-align:center;
 		border-radius:50%; border:2px solid rgba(255,255,255,0.40); background:rgba(255,255,255,0.14);
@@ -51,20 +52,23 @@
 	#btn-pause { top:calc(10px + env(safe-area-inset-top, 0px)); left:10px; }
 	#btn-enter { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(10px + env(safe-area-inset-right, 0px)); }
 	#btn-grenade { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(62px + env(safe-area-inset-right, 0px)); }
-	#btn-melee { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(114px + env(safe-area-inset-right, 0px)); }
-	#btn-swap { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(166px + env(safe-area-inset-right, 0px)); }
-	#btn-use { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(218px + env(safe-area-inset-right, 0px)); }
-	#btn-reload { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(270px + env(safe-area-inset-right, 0px)); }
-	/* Face-button diamond, above the right stick (centre ~ right 215px, bottom 240px). */
-	#btn-fire { right:calc(171px + env(safe-area-inset-right, 0px)); bottom:calc(131px + env(safe-area-inset-bottom, 0px));
-		width:88px; height:88px; font-size:16px; background:rgba(255,60,40,0.32); border-color:rgba(255,120,100,0.55); }
-	#btn-fire.active { background:rgba(255,60,40,0.60); }
-	#btn-jump { right:calc(118px + env(safe-area-inset-right, 0px)); bottom:calc(208px + env(safe-area-inset-bottom, 0px));
-		width:64px; height:64px; font-size:13px; }
-	#btn-ads { right:calc(185px + env(safe-area-inset-right, 0px)); bottom:calc(271px + env(safe-area-inset-bottom, 0px));
-		width:60px; height:60px; font-size:12px; }
-	#btn-sprint { right:calc(248px + env(safe-area-inset-right, 0px)); bottom:calc(212px + env(safe-area-inset-bottom, 0px));
-		width:56px; height:56px; font-size:11px; }
+	#btn-swap { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(114px + env(safe-area-inset-right, 0px)); }
+	#btn-use { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(166px + env(safe-area-inset-right, 0px)); }
+	#btn-reload { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(218px + env(safe-area-inset-right, 0px)); }
+	#btn-jump { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(270px + env(safe-area-inset-right, 0px)); }
+	#btn-ads { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(322px + env(safe-area-inset-right, 0px)); }
+	#btn-sprint { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(374px + env(safe-area-inset-right, 0px)); }
+	/* Knife: wide pill, bottom centre, like the reference. */
+	#btn-melee { left:50%; transform:translateX(-50%); bottom:calc(18px + env(safe-area-inset-bottom, 0px));
+		width:132px; height:52px; border-radius:26px; background:rgba(255,255,255,0.16); }
+	#btn-melee svg { width:96px; height:26px; display:block; }
+	#btn-melee.active { background:rgba(255,255,255,0.38); }
+	/* Portrait: second row for the last three top buttons so they fit. */
+	@media (orientation: portrait) {
+		#btn-jump { top:calc(58px + env(safe-area-inset-top, 0px)); right:calc(10px + env(safe-area-inset-right, 0px)); }
+		#btn-ads { top:calc(58px + env(safe-area-inset-top, 0px)); right:calc(62px + env(safe-area-inset-right, 0px)); }
+		#btn-sprint { top:calc(58px + env(safe-area-inset-top, 0px)); right:calc(114px + env(safe-area-inset-right, 0px)); }
+	}
 
 	#touch-hint { position:absolute; top:calc(64px + env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%);
 		color:rgba(255,255,255,0.75); font-family:Arial, Helvetica, sans-serif; font-size:13px; white-space:nowrap;
@@ -87,18 +91,17 @@
 		<div class="stick-zone" id="stick-zone-r"></div>
 		<div class="stick" id="stick-l"><div class="stick-base"></div><div class="stick-knob" id="stick-knob-l"></div></div>
 		<div class="stick" id="stick-r"><div class="stick-base"></div><div class="stick-knob" id="stick-knob-r"></div></div>
-		<div id="touch-hint">Left stick to move &bull; Right stick to look &bull; Tap screen to click</div>
+		<div id="touch-hint">Left stick to move &bull; Right stick to look &bull; Tap screen to fire</div>
 		<div class="tbtn small" id="btn-pause">II</div>
 		<div class="tbtn small" id="btn-enter">OK</div>
 		<div class="tbtn small" id="btn-grenade">NADE</div>
-		<div class="tbtn small" id="btn-melee">KNIFE</div>
 		<div class="tbtn small" id="btn-swap">SWAP</div>
 		<div class="tbtn small" id="btn-use">USE</div>
 		<div class="tbtn small" id="btn-reload">RLD</div>
-		<div class="tbtn" id="btn-ads">AIM</div>
-		<div class="tbtn" id="btn-jump">JUMP</div>
-		<div class="tbtn" id="btn-sprint">RUN</div>
-		<div class="tbtn" id="btn-fire">FIRE</div>
+		<div class="tbtn small" id="btn-jump">JUMP</div>
+		<div class="tbtn small" id="btn-ads">AIM</div>
+		<div class="tbtn small" id="btn-sprint">RUN</div>
+		<div class="tbtn" id="btn-melee"><svg viewBox="0 0 96 26"><path d="M6 13 L50 6 Q58 6 58 13 Q58 20 50 20 Z" fill="#fff"/><rect x="58" y="8" width="5" height="10" rx="1" fill="#fff"/><rect x="65" y="9" width="26" height="8" rx="4" fill="#fff"/></svg></div>
 	</div>
 
 	<script type='text/javascript'>
@@ -416,10 +419,6 @@ else
 	}
 	function centerXY() { return { x: Math.round(window.innerWidth / 2), y: Math.round(window.innerHeight / 2) }; }
 
-	// FIRE: hold left mouse button (crosshair is screen centre)
-	bindHold('btn-fire',
-		function () { var p = centerXY(); mouseDown(0, p.x, p.y); },
-		function () { var p = centerXY(); mouseUp(0, p.x, p.y); });
 	// AIM: hold right mouse button (aim down sights)
 	bindHold('btn-ads',
 		function () { var p = centerXY(); mouseDown(2, p.x, p.y); },
@@ -548,7 +547,7 @@ else
 	lookZone.addEventListener('touchend', lookEnd, { passive: false });
 	lookZone.addEventListener('touchcancel', lookEnd, { passive: false });
 
-	/* ---------- tap zone (right side): tap to click for menus ---------- */
+	/* ---------- tap zone (whole screen): tap to fire / click ---------- */
 	var tapZone = document.getElementById('tap-zone');
 	var tapId = null, tapStartX = 0, tapStartY = 0, tapStartT = 0, tapMoved = 0;
 	function tapTouch(e) {
@@ -575,7 +574,8 @@ else
 		var t = tapTouch(e);
 		if (!t) return;
 		tapId = null;
-		// A short, near-stationary touch is a click (menus, prompts).
+		// A short, near-stationary touch fires the weapon in game,
+		// and is a click in the menus (same mouse button either way).
 		if (tapMoved < 12 && (Date.now() - tapStartT) < 350) {
 			mouseDown(0, tapStartX, tapStartY);
 			setTimeout(function () { mouseUp(0, tapStartX, tapStartY); }, 60);
