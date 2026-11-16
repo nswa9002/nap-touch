@@ -24,13 +24,23 @@
 	body.touch.playing #touch-ui { display:block; }
 	#touch-ui * { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; touch-action:none; -webkit-tap-highlight-color:transparent; }
 
-	#stick-zone { position:absolute; left:0; bottom:0; width:45vw; height:55vh; pointer-events:auto; }
-	#stick-base { position:absolute; width:112px; height:112px; margin:-56px 0 0 -56px; border-radius:50%;
-		background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.30); display:none; }
-	#stick-knob { position:absolute; width:52px; height:52px; margin:-26px 0 0 -26px; border-radius:50%;
-		background:rgba(255,255,255,0.28); border:2px solid rgba(255,255,255,0.55); display:none; }
+	/* ---- emulator-style virtual sticks: fixed bases, glossy knobs ---- */
+	.stick-zone { position:absolute; bottom:0; width:42vw; height:60vh; pointer-events:auto; }
+	#stick-zone-l { left:0; }
+	#stick-zone-r { right:0; }
+	.stick { position:absolute; width:124px; height:124px; pointer-events:none; }
+	#stick-l { left:34px; bottom:34px; }
+	#stick-r { right:34px; bottom:34px; }
+	.stick-base { position:absolute; inset:0; border-radius:50%;
+		background:radial-gradient(circle at 50% 42%, rgba(255,255,255,0.10), rgba(0,0,0,0.35) 75%);
+		border:2px solid rgba(255,255,255,0.35);
+		box-shadow:0 0 0 4px rgba(0,0,0,0.25), inset 0 2px 10px rgba(0,0,0,0.5); }
+	.stick-knob { position:absolute; width:56px; height:56px; left:34px; top:34px; border-radius:50%;
+		background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.75), rgba(255,255,255,0.30) 45%, rgba(0,0,0,0.35) 100%);
+		border:2px solid rgba(255,255,255,0.60); box-shadow:0 3px 8px rgba(0,0,0,0.6); }
 
-	#look-zone { position:absolute; right:0; top:0; width:55vw; height:100%; pointer-events:auto; }
+	/* Tap anywhere on the right side (outside sticks/buttons) to click — menus, prompts. */
+	#tap-zone { position:absolute; right:0; top:0; width:55vw; height:100%; pointer-events:auto; }
 
 	.tbtn { position:absolute; display:flex; align-items:center; justify-content:center; text-align:center;
 		border-radius:50%; border:2px solid rgba(255,255,255,0.40); background:rgba(255,255,255,0.14);
@@ -45,14 +55,15 @@
 	#btn-swap { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(166px + env(safe-area-inset-right, 0px)); }
 	#btn-use { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(218px + env(safe-area-inset-right, 0px)); }
 	#btn-reload { top:calc(10px + env(safe-area-inset-top, 0px)); right:calc(270px + env(safe-area-inset-right, 0px)); }
-	#btn-fire { right:calc(16px + env(safe-area-inset-right, 0px)); bottom:calc(22px + env(safe-area-inset-bottom, 0px));
+	/* Face-button diamond, above the right stick (centre ~ right 215px, bottom 240px). */
+	#btn-fire { right:calc(171px + env(safe-area-inset-right, 0px)); bottom:calc(131px + env(safe-area-inset-bottom, 0px));
 		width:88px; height:88px; font-size:16px; background:rgba(255,60,40,0.32); border-color:rgba(255,120,100,0.55); }
 	#btn-fire.active { background:rgba(255,60,40,0.60); }
-	#btn-jump { right:calc(120px + env(safe-area-inset-right, 0px)); bottom:calc(26px + env(safe-area-inset-bottom, 0px));
+	#btn-jump { right:calc(118px + env(safe-area-inset-right, 0px)); bottom:calc(208px + env(safe-area-inset-bottom, 0px));
 		width:64px; height:64px; font-size:13px; }
-	#btn-ads { right:calc(116px + env(safe-area-inset-right, 0px)); bottom:calc(106px + env(safe-area-inset-bottom, 0px));
+	#btn-ads { right:calc(185px + env(safe-area-inset-right, 0px)); bottom:calc(271px + env(safe-area-inset-bottom, 0px));
 		width:60px; height:60px; font-size:12px; }
-	#btn-sprint { right:calc(198px + env(safe-area-inset-right, 0px)); bottom:calc(32px + env(safe-area-inset-bottom, 0px));
+	#btn-sprint { right:calc(248px + env(safe-area-inset-right, 0px)); bottom:calc(212px + env(safe-area-inset-bottom, 0px));
 		width:56px; height:56px; font-size:11px; }
 
 	#touch-hint { position:absolute; top:calc(64px + env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%);
@@ -71,9 +82,12 @@
 
 	<!-- Touch controls (shown only on touch devices, once the game has started) -->
 	<div id="touch-ui">
-		<div id="stick-zone"><div id="stick-base"></div><div id="stick-knob"></div></div>
-		<div id="look-zone"></div>
-		<div id="touch-hint">Left stick to move &bull; Drag right side to look &bull; Tap right side to click</div>
+		<div id="tap-zone"></div>
+		<div class="stick-zone" id="stick-zone-l"></div>
+		<div class="stick-zone" id="stick-zone-r"></div>
+		<div class="stick" id="stick-l"><div class="stick-base"></div><div class="stick-knob" id="stick-knob-l"></div></div>
+		<div class="stick" id="stick-r"><div class="stick-base"></div><div class="stick-knob" id="stick-knob-r"></div></div>
+		<div id="touch-hint">Left stick to move &bull; Right stick to look &bull; Tap screen to click</div>
 		<div class="tbtn small" id="btn-pause">II</div>
 		<div class="tbtn small" id="btn-enter">OK</div>
 		<div class="tbtn small" id="btn-grenade">NADE</div>
@@ -422,10 +436,9 @@ else
 	bindTap('btn-pause',  function () { keyTap(KEY.ESC); });
 	bindTap('btn-enter',  function () { keyTap(KEY.ENTER); });
 
-	/* ---------- virtual joystick (left) ---------- */
-	var stickZone = document.getElementById('stick-zone');
-	var stickBase = document.getElementById('stick-base');
-	var stickKnob = document.getElementById('stick-knob');
+	/* ---------- virtual joystick (left, fixed base) ---------- */
+	var stickZone = document.getElementById('stick-zone-l');
+	var stickKnob = document.getElementById('stick-knob-l');
 	var STICK_RADIUS = 48, DEAD = 10;
 	var stickId = null, anchorX = 0, anchorY = 0;
 	var stickState = { f: false, b: false, l: false, r: false };
@@ -444,8 +457,8 @@ else
 		if (stickState.r) keyUp(KEY.D);
 		stickState = { f: false, b: false, l: false, r: false };
 		stickId = null;
-		stickBase.style.display = 'none';
-		stickKnob.style.display = 'none';
+		stickKnob.style.left = '34px';
+		stickKnob.style.top = '34px';
 	}
 	function stickTouch(e) {
 		for (var i = 0; i < e.changedTouches.length; i++) {
@@ -453,15 +466,13 @@ else
 		}
 		return null;
 	}
+	// Fixed stick: base sits at left 34px / bottom 34px, centre (96, H-96).
 	stickZone.addEventListener('touchstart', function (e) {
 		e.preventDefault(); e.stopPropagation();
 		if (stickId !== null) return;
 		var t = e.changedTouches[0];
-		stickId = t.identifier; anchorX = t.clientX; anchorY = t.clientY;
-		stickBase.style.display = 'block';
-		stickKnob.style.display = 'block';
-		stickBase.style.left = anchorX + 'px'; stickBase.style.top = anchorY + 'px';
-		stickKnob.style.left = anchorX + 'px'; stickKnob.style.top = anchorY + 'px';
+		stickId = t.identifier;
+		anchorX = 96; anchorY = window.innerHeight - 96;
 	}, { passive: false });
 	stickZone.addEventListener('touchmove', function (e) {
 		e.preventDefault(); e.stopPropagation();
@@ -470,8 +481,8 @@ else
 		var dx = t.clientX - anchorX, dy = t.clientY - anchorY;
 		var len = Math.sqrt(dx * dx + dy * dy);
 		if (len > STICK_RADIUS) { dx = dx / len * STICK_RADIUS; dy = dy / len * STICK_RADIUS; }
-		stickKnob.style.left = (anchorX + dx) + 'px';
-		stickKnob.style.top = (anchorY + dy) + 'px';
+		stickKnob.style.left = (34 + dx) + 'px';
+		stickKnob.style.top = (34 + dy) + 'px';
 		applyStick(dx, dy);
 	}, { passive: false });
 	var stickEnd = function (e) {
@@ -481,9 +492,11 @@ else
 	stickZone.addEventListener('touchend', stickEnd, { passive: false });
 	stickZone.addEventListener('touchcancel', stickEnd, { passive: false });
 
-	/* ---------- look area (right): drag to look, tap to click ---------- */
-	var lookZone = document.getElementById('look-zone');
-	var lookId = null, lastX = 0, lastY = 0, startX = 0, startY = 0, startT = 0, moved = 0;
+	/* ---------- virtual joystick (right, fixed base): look ---------- */
+	var lookZone = document.getElementById('stick-zone-r');
+	var lookKnob = document.getElementById('stick-knob-r');
+	var LOOK_RADIUS = 48, LOOK_DEAD = 6, LOOK_GAIN = 0.22; // px of look per px of deflection, per 16ms tick
+	var lookId = null, lookAnchorX = 0, lookAnchorY = 0, lookDX = 0, lookDY = 0, lookTimer = null;
 	var virtX = 0, virtY = 0; // virtual cursor, kept moving so absolute-position mouse reads see deltas too
 	function lookTouch(e) {
 		for (var i = 0; i < e.changedTouches.length; i++) {
@@ -491,40 +504,85 @@ else
 		}
 		return null;
 	}
+	function lookTick() {
+		// While the right stick is held deflected, keep turning — like a real stick.
+		var dx = lookDX, dy = lookDY;
+		if (Math.sqrt(dx * dx + dy * dy) < LOOK_DEAD) return;
+		var mx = dx * LOOK_GAIN, my = dy * LOOK_GAIN;
+		virtX = Math.max(0, Math.min(window.innerWidth, virtX + mx));
+		virtY = Math.max(0, Math.min(window.innerHeight, virtY + my));
+		// movementX/Y for pointer-lock-style look, moving clientX/Y for
+		// absolute-position look — covers both engine paths.
+		mouseMove(mx, my, Math.round(virtX), Math.round(virtY));
+	}
+	// Fixed stick: base sits at right 34px / bottom 34px, centre (W-96, H-96).
 	lookZone.addEventListener('touchstart', function (e) {
 		e.preventDefault(); e.stopPropagation();
 		if (lookId !== null) return;
 		var t = e.changedTouches[0];
-		lookId = t.identifier; lastX = t.clientX; lastY = t.clientY;
-		startX = t.clientX; startY = t.clientY; startT = Date.now(); moved = 0;
+		lookId = t.identifier;
+		lookAnchorX = window.innerWidth - 96; lookAnchorY = window.innerHeight - 96;
+		lookDX = 0; lookDY = 0;
 		virtX = t.clientX; virtY = t.clientY;
+		if (lookTimer === null) lookTimer = setInterval(lookTick, 16);
 	}, { passive: false });
 	lookZone.addEventListener('touchmove', function (e) {
 		e.preventDefault(); e.stopPropagation();
 		var t = lookTouch(e);
 		if (!t) return;
-		var dx = t.clientX - lastX, dy = t.clientY - lastY;
-		lastX = t.clientX; lastY = t.clientY;
-		moved += Math.abs(dx) + Math.abs(dy);
-		virtX = Math.max(0, Math.min(window.innerWidth, virtX + dx));
-		virtY = Math.max(0, Math.min(window.innerHeight, virtY + dy));
-		// movementX/Y for pointer-lock-style look, moving clientX/Y for
-		// absolute-position look — covers both engine paths.
-		mouseMove(dx, dy, Math.round(virtX), Math.round(virtY));
+		var dx = t.clientX - lookAnchorX, dy = t.clientY - lookAnchorY;
+		var len = Math.sqrt(dx * dx + dy * dy);
+		if (len > LOOK_RADIUS) { dx = dx / len * LOOK_RADIUS; dy = dy / len * LOOK_RADIUS; }
+		lookDX = dx; lookDY = dy;
+		lookKnob.style.left = (34 + dx) + 'px';
+		lookKnob.style.top = (34 + dy) + 'px';
 	}, { passive: false });
 	var lookEnd = function (e) {
 		e.preventDefault(); e.stopPropagation();
-		var t = lookTouch(e);
-		if (!t) return;
-		lookId = null;
-		// A short, near-stationary touch is a click (menus, prompts).
-		if (moved < 12 && (Date.now() - startT) < 350) {
-			mouseDown(0, startX, startY);
-			setTimeout(function () { mouseUp(0, startX, startY); }, 60);
-		}
+		if (!lookTouch(e)) return;
+		lookId = null; lookDX = 0; lookDY = 0;
+		if (lookTimer !== null) { clearInterval(lookTimer); lookTimer = null; }
+		lookKnob.style.left = '34px';
+		lookKnob.style.top = '34px';
 	};
 	lookZone.addEventListener('touchend', lookEnd, { passive: false });
 	lookZone.addEventListener('touchcancel', lookEnd, { passive: false });
+
+	/* ---------- tap zone (right side): tap to click for menus ---------- */
+	var tapZone = document.getElementById('tap-zone');
+	var tapId = null, tapStartX = 0, tapStartY = 0, tapStartT = 0, tapMoved = 0;
+	function tapTouch(e) {
+		for (var i = 0; i < e.changedTouches.length; i++) {
+			if (e.changedTouches[i].identifier === tapId) return e.changedTouches[i];
+		}
+		return null;
+	}
+	tapZone.addEventListener('touchstart', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		if (tapId !== null) return;
+		var t = e.changedTouches[0];
+		tapId = t.identifier;
+		tapStartX = t.clientX; tapStartY = t.clientY; tapStartT = Date.now(); tapMoved = 0;
+	}, { passive: false });
+	tapZone.addEventListener('touchmove', function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var t = tapTouch(e);
+		if (!t) return;
+		tapMoved += Math.abs(t.clientX - tapStartX) + Math.abs(t.clientY - tapStartY);
+	}, { passive: false });
+	var tapEnd = function (e) {
+		e.preventDefault(); e.stopPropagation();
+		var t = tapTouch(e);
+		if (!t) return;
+		tapId = null;
+		// A short, near-stationary touch is a click (menus, prompts).
+		if (tapMoved < 12 && (Date.now() - tapStartT) < 350) {
+			mouseDown(0, tapStartX, tapStartY);
+			setTimeout(function () { mouseUp(0, tapStartX, tapStartY); }, 60);
+		}
+	};
+	tapZone.addEventListener('touchend', tapEnd, { passive: false });
+	tapZone.addEventListener('touchcancel', tapEnd, { passive: false });
 
 	/* ---------- misc ---------- */
 	// Stop pull-to-refresh / double-tap zoom gestures reaching the page.

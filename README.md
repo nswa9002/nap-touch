@@ -70,21 +70,26 @@ https://nzp.gay/ — nothing else is bundled here.
 bindings screen (source: nzp-team/quakec `source/menu/menu_bind.qc`)
 confirms the same command mapping.
 
-## Touch mapping implemented
+## Touch mapping implemented (emulator-style)
 
-- **Left virtual joystick** (floating — appears where the thumb lands):
-  drag maps to W/A/S/D with a ~10 px dead zone; diagonals press two
-  keys at once; releasing the stick releases all movement keys.
-- **Right side drag**: look. Each drag dispatches synthetic
-  `mousemove` on the canvas carrying BOTH `movementX/Y` (frame delta,
-  for pointer-lock-style look) AND a moving `clientX/Y` virtual cursor
-  (for absolute-position look) — covers both engine paths.
-- **Right side quick tap** (minimal movement, <350 ms): mouse click
-  (mousedown + mouseup, button 0) so menus and prompts can be used.
-- **Buttons**: FIRE (hold = mouse button 0), AIM (hold = mouse
-  button 2), RUN (hold = Shift), JUMP (Space), RLD (R), USE (E),
-  SWAP (Ctrl), KNIFE (V), NADE (G), II pause (Esc), OK (Enter, for
-  menu confirm). Taps are quick press + release (~70 ms).
+- **Left virtual stick** (fixed base, bottom-left): drag maps to W/A/S/D
+  with a ~10 px dead zone; diagonals press two keys at once; releasing
+  the stick releases all movement keys.
+- **Right virtual stick** (fixed base, bottom-right): drag to look. While
+  the stick is held deflected it keeps turning the view (a 16 ms loop
+  sends look movement proportional to the deflection), so holding it
+  works like a real stick.
+- **Tap to click**: tapping anywhere on the right side outside the
+  sticks and buttons sends a mouse click, so menus and prompts can be
+  used.
+- **Face-button diamond** above the right stick: FIRE (big, hold = mouse
+  button 0), JUMP, AIM (hold = mouse button 2), RUN (hold = Shift).
+- **Top row** (shoulder-style): pause (Esc), OK (Enter, menu confirm),
+  NADE (G), KNIFE (V), SWAP (Ctrl), USE (E), RLD (R). Taps are quick
+  press + release (~70 ms).
+- Look movement carries BOTH `movementX/Y` (frame delta, for
+  pointer-lock-style look) AND a moving `clientX/Y` virtual cursor (for
+  absolute-position look) — covers both engine paths.
 - Controls show only on touch devices (`ontouchstart` /
   `maxTouchPoints`, or `?touch=1`), and only once the game has started
   (`body.playing`). Desktop keeps the plain game.
