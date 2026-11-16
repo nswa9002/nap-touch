@@ -70,33 +70,49 @@ https://nzp.gay/ — nothing else is bundled here.
 bindings screen (source: nzp-team/quakec `source/menu/menu_bind.qc`)
 confirms the same command mapping.
 
-## Touch mapping implemented (mobile FPS layout)
+## Touch mapping implemented (2009 original — Call of Duty: Zombies iOS)
+
+Researched from the CoD Wiki, Pocket Gamer / GameSpot / Gizmodo reviews,
+GameFAQs player guides, and gameplay footage (see report in
+~/workspace/research_notes/old-cod-zombies-ios-controls-20261116-0215/).
 
 - **Left virtual stick** (fixed base, bottom-left, white ring with tick
-  marks): drag maps to W/A/S/D with a ~10 px dead zone; diagonals press
-  two keys at once; releasing the stick releases all movement keys.
+  marks, visible even when idle): drag maps to W/A/S/D with a ~10 px
+  dead zone; diagonals press two keys at once; releasing the stick
+  releases all movement keys.
 - **Right virtual stick** (fixed base, bottom-right, same style): drag
   to look. While the stick is held deflected it keeps turning the view
-  (a 16 ms loop sends look movement proportional to the deflection),
-  so holding it works like a real stick.
-- **Tap to fire**: tapping anywhere on screen outside the sticks and
-  buttons sends a mouse click — that fires the weapon in game, and is
-  a click in the menus (same mouse button either way). No FIRE button.
+  (a 16 ms loop sends look movement proportional to the deflection).
+- **Tap to fire — no FIRE button**: tap anywhere on screen (or tap the
+  right stick) for one shot; **double-tap + hold** for a sustained
+  automatic stream. In the menus the same tap is a click.
+- **ADS**: circular crosshair button above the right stick (hold = mouse
+  button 2, aim down sights).
 - **Knife in the middle**: wide pill button at bottom-centre with a
   knife icon (V / melee).
-- **Top row** (shoulder-style): pause (Esc), OK (Enter, menu confirm),
-  NADE (G), SWAP (Ctrl), USE (E), RLD (R), JUMP (Space), AIM (hold =
-  mouse button 2), RUN (hold = Shift). Taps are quick press + release
-  (~70 ms); in portrait the last three drop to a second row.
+- **Weapon icon, top-right**: tap to reload (R), double-tap to swap
+  weapon (Ctrl) — exactly like the old game. No separate reload/swap
+  buttons.
+- **Grenade**: icon button on the right edge, below the weapon icon
+  (G). The old game showed a grenade count next to it; this page can't
+  read the game's ammo/grenade counts, so no count is shown.
+- **Top row**: pause (Esc, top-left), OK (Enter, menu confirm), USE
+  (E — the "do actions" button: buy weapons, open doors, repair
+  barricades), JUMP (Space), RUN (hold = Shift). The 2009 game had no
+  jump/sprint buttons; they stay tucked up top because NZ:P supports
+  them and removing them would lose the ability entirely.
+- **Menus**: tap to select, like the old game (a tap is a mouse click).
+- **Aim assist**: the old game's "smart targeting" snapped the crosshair
+  to zombies and couldn't be turned off. That lives inside the game
+  itself — this page can't add it, and NZ:P's engine may or may not
+  have its own. Unverified either way.
+- **Buy/repair**: the old game showed a contextual prompt (e.g.
+  "Repair Barricade" centre-screen). This page can't tell when the
+  player is near something buyable, so USE is a plain button — tap it
+  when the game's own prompt shows.
 - Look movement carries BOTH `movementX/Y` (frame delta, for
   pointer-lock-style look) AND a moving `clientX/Y` virtual cursor (for
   absolute-position look) — covers both engine paths.
-- Controls show only on touch devices (`ontouchstart` /
-  `maxTouchPoints`, or `?touch=1`), and only once the game has started
-  (`body.playing`). Desktop keeps the plain game.
-- `touch-action: none`, `passive:false` listeners with
-  `preventDefault`, viewport `user-scalable=no`, so no scrolling,
-  zooming, or pull-to-refresh while playing.
 
 ## Verification done (2026-11-15)
 
